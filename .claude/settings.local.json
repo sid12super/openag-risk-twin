@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /mnt/c/Users/siddh/Downloads/OPEN-AG/openag-risk-twin/pipeline/sources)",
+      "Bash(mkdir -p /mnt/c/Users/siddh/Downloads/OPEN-AG/openag-risk-twin/data/raw)",
+      "Bash(mkdir -p /mnt/c/Users/siddh/Downloads/OPEN-AG/openag-risk-twin/notebooks)",
+      "Bash(mkdir -p /mnt/c/Users/siddh/Downloads/OPEN-AG/openag-risk-twin/backend)",
+      "Bash(mkdir -p /mnt/c/Users/siddh/Downloads/OPEN-AG/openag-risk-twin/frontend)"
+    ]
+  }
+}
