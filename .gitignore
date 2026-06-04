@@ -3,6 +3,7 @@
 
 # Data (raw downloads cached; DuckDB regenerable from raw)
 data/
+annual.txt
 
 # Python-generated files
 __pycache__/

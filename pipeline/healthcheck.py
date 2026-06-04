@@ -1,10 +1,12 @@
 """Reachability + schema checks for each data source. Run before building the pipeline."""
-from pipeline.sources import prices_yf, wasde
+from pipeline.sources import prices_yf, wasde, macro_fred, drought, cftc
 
 SOURCES = {
     "yfinance ZC=F": prices_yf,
     "USDA WASDE":    wasde,
-    # cftc, drought, macro_fred added as their modules land
+    "FRED macro":    macro_fred,
+    "cftc COT":      cftc,
+    "US Drought Monitor": drought,
 }
 
 def main():
