@@ -49,7 +49,7 @@ Each phase opens a new chat in the Claude Project. SCOPE.md and PLAN.md travel w
 
 **Progress**: ✅ Python 3.13 via uv, repo initialized, `docs/` + `CLAUDE.md`/`AGENTS.md` locked, file structure created. ⬜ Data pipeline (healthcheck → 5 sources → DuckDB) and the two GitHub Actions workflows still to do — these are what actually close out Week 2.
 
-▶ NEXT: write pipeline/healthcheck.py — fetch + validate yfinance ZC=F and the latest WASDE row; both keyless. Then wire FRED/CFTC/drought.
+▶ NEXT: wire cftc/drought/macro_fred (same fetch/validate + cache-first pattern, FRED key already in .env); then build_duckdb to unify all five — remember the version-suffix fallback and 404-tolerance for missing months.
 **Tasks**:
 
 - Initialize `openag-risk-twin` repo with SCOPE.md, PLAN.md, RESEARCH_NOTES.md, README.md skeleton
