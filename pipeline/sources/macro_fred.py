@@ -13,9 +13,10 @@ SERIES = {
 }
 
 def fetch(start: str = "2016-01-01") -> pd.DataFrame:
-    fred = Fred()  # reads FRED_API_KEY from env
-    return pd.DataFrame({name: fred.get_series(code, observation_start=start)
-                         for name, code in SERIES.items()})
+    fred = Fred()
+    df = pd.DataFrame({name: fred.get_series(code, observation_start=start)
+                       for name, code in SERIES.items()})
+    return df.rename_axis("date").reset_index() 
 
 def validate(df: pd.DataFrame) -> None:
     if df.empty:

@@ -49,7 +49,7 @@ Each phase opens a new chat in the Claude Project. SCOPE.md and PLAN.md travel w
 
 **Progress**: ✅ Python 3.13 via uv, repo initialized, `docs/` + `CLAUDE.md`/`AGENTS.md` locked, file structure created. ⬜ Data pipeline (healthcheck → 5 sources → DuckDB) and the two GitHub Actions workflows still to do — these are what actually close out Week 2.
 
-▶ NEXT: build_duckdb — five tables at native frequency into data/openag.duckdb; WASDE loop with V2 fallback + 404 skip + raw caching; trim CFTC to ~6 columns; dedupe each table before write.
+▶ NEXT:ci.yml + refresh.yml to close Week 2; then Week 3 regime analysis (parse WASDE ReportDate to a real date for the join)
 **Tasks**:
 
 - Initialize `openag-risk-twin` repo with SCOPE.md, PLAN.md, RESEARCH_NOTES.md, README.md skeleton
