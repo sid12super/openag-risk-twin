@@ -1,7 +1,6 @@
 # pipeline/build_duckdb.py
 import duckdb
 from pathlib import Path
-from datetime import date
 from pipeline.sources import prices_yf, wasde, cftc, drought, macro_fred
 
 DB_PATH = Path("data/openag.duckdb")
