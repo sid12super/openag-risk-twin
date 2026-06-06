@@ -8,8 +8,7 @@
 - **ProAg engagement**: complete
 - **Active commitments**: HyperQuark Research Fellow + active job search (primary focus)
 - **Handshake AI**: resuming after EAD authorization
-- **Week 1 (Research)**: ✅ complete — RESEARCH_NOTES.md shipped and corrected
-- **Now in**: Week 2 (Foundation) — Python 3.13 + uv set up, repo initialized, docs locked; data pipeline next
+- **Week 2** ✅ — five-source warehouse + CI/CD, both workflows green.
 
 ## Sprint structure
 
@@ -47,9 +46,8 @@ Each phase opens a new chat in the Claude Project. SCOPE.md and PLAN.md travel w
 
 **Goal**: Repo skeleton, data pipeline, GitHub Actions skeleton.
 
-**Progress**: ✅ Python 3.13 via uv, repo initialized, `docs/` + `CLAUDE.md`/`AGENTS.md` locked, file structure created. ⬜ Data pipeline (healthcheck → 5 sources → DuckDB) and the two GitHub Actions workflows still to do — these are what actually close out Week 2.
+**Progress**: ✅ Python 3.13 via uv, repo initialized, `docs/` + `CLAUDE.md`/`AGENTS.md` locked, file structure created. ⬜ Data pipeline (healthcheck → 5 sources → DuckDB) and the two GitHub Actions workflows created.
 
-▶ NEXT:ci.yml + refresh.yml to close Week 2; then Week 3 regime analysis (parse WASDE ReportDate to a real date for the join)
 **Tasks**:
 
 - Initialize `openag-risk-twin` repo with SCOPE.md, PLAN.md, RESEARCH_NOTES.md, README.md skeleton
@@ -74,6 +72,8 @@ Each phase opens a new chat in the Claude Project. SCOPE.md and PLAN.md travel w
 **Time**: 10–12 hours
 
 **Goal**: Empirical regime detection. The notebook that justifies every subsequent modeling decision.
+
+ ▶ NEXT: Week 3 regime analysis. First task: parse WASDE ReportDate (text "Month Year") into a real date for the join. Then ruptures changepoint detection on log returns + rolling vol; structural break tests; regime-characterization features. Deliverable: notebooks/01_regime_analysis.ipynb.
 
 **Tasks**:
 
