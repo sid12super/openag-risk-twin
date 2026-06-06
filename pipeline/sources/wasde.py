@@ -8,7 +8,7 @@ reposted months carry a version suffix, e.g. ...-2026-05-V2.csv.
 import io
 from pathlib import Path
 import pandas as pd
-import requests
+from curl_cffi import requests
 from datetime import date
 
 BASE = ("https://www.usda.gov/sites/default/files/documents/"
@@ -27,7 +27,7 @@ def fetch(year: int = 2026, month: int = 5) -> pd.DataFrame:
     cached = sorted(RAW_DIR.glob(f"oce-wasde-report-data-{year}-{month:02d}*.csv"))  # matches -V2
     if cached:
         return pd.read_csv(cached[-1])
-    r = requests.get(url_for(year, month), headers=HEADERS, timeout=30)
+    r = requests.get(url_for(year, month), impersonate="chrome", timeout=30)
     r.raise_for_status()
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     (RAW_DIR / f"oce-wasde-report-data-{year}-{month:02d}.csv").write_text(r.text)
@@ -51,9 +51,9 @@ def _read_or_download(year, month, download=True):
     base = url_for(year, month).removesuffix(".csv")
     for suffix in ("", "-V2", "-V3"):
         try:
-            r = requests.get(base + suffix + ".csv", headers=HEADERS, timeout=30)
+            r = requests.get(base + suffix + ".csv", impersonate="chrome", timeout=30)
             r.raise_for_status()
-        except requests.RequestException:
+        except Exception:        # was: except requests.RequestException
             continue
         RAW_DIR.mkdir(parents=True, exist_ok=True)
         (RAW_DIR / f"oce-wasde-report-data-{year}-{month:02d}{suffix}.csv").write_text(r.text)
