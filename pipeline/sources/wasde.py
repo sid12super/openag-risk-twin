@@ -24,14 +24,11 @@ def url_for(year: int, month: int) -> str:
     return BASE.format(year=year, month=month)
 
 def fetch(year: int = 2026, month: int = 5) -> pd.DataFrame:
-    cached = sorted(RAW_DIR.glob(f"oce-wasde-report-data-{year}-{month:02d}*.csv"))  # matches -V2
-    if cached:
-        return pd.read_csv(cached[-1])
-    r = requests.get(url_for(year, month), impersonate="chrome", timeout=30)
-    r.raise_for_status()
-    RAW_DIR.mkdir(parents=True, exist_ok=True)
-    (RAW_DIR / f"oce-wasde-report-data-{year}-{month:02d}.csv").write_text(r.text)
-    return pd.read_csv(io.StringIO(r.text))
+    """Single month, cache-first with version fallback (used by healthcheck)."""
+    df = _read_or_download(year, month, download=True)
+    if df is None:
+        raise ValueError(f"WASDE {year}-{month:02d} unavailable (tried base + -V2/-V3)")
+    return df
 
 def validate(df: pd.DataFrame) -> None:
     if df.empty:
