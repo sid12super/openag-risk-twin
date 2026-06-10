@@ -4,6 +4,7 @@
 USDA bot-blocks plain HTTP clients from this network, so we impersonate a
 browser via curl_cffi. Run from anywhere: `uv run python scripts/populate_wasde.py`.
 """
+
 from pathlib import Path
 from curl_cffi import requests
 
@@ -17,11 +18,14 @@ for year in range(2021, 2027):
             continue
         for suffix in ("", "-V2", "-V3"):
             try:
-                r = requests.get(BASE.format(year, month, suffix),
-                                 impersonate="chrome", timeout=30)
+                r = requests.get(
+                    BASE.format(year, month, suffix), impersonate="chrome", timeout=30
+                )
                 r.raise_for_status()
             except Exception:
                 continue
-            (RAW / f"oce-wasde-report-data-{year}-{month:02d}{suffix}.csv").write_bytes(r.content)
+            (RAW / f"oce-wasde-report-data-{year}-{month:02d}{suffix}.csv").write_bytes(
+                r.content
+            )
             print(f"got {year}-{month:02d}{suffix}")
             break

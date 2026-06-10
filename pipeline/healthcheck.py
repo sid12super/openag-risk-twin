@@ -1,13 +1,15 @@
 """Reachability + schema checks for each data source. Run before building the pipeline."""
+
 from pipeline.sources import prices_yf, wasde, macro_fred, drought, cftc
 
 SOURCES = {
     "yfinance ZC=F": prices_yf,
-    "USDA WASDE":    wasde,
-    "FRED macro":    macro_fred,
-    "cftc COT":      cftc,
+    "USDA WASDE": wasde,
+    "FRED macro": macro_fred,
+    "cftc COT": cftc,
     "US Drought Monitor": drought,
 }
+
 
 def main():
     results = {}
@@ -22,7 +24,8 @@ def main():
     for name, status in results.items():
         print(f"{name:<{w}}  {status}")
     if any(s.startswith("FAIL") for s in results.values()):
-        raise SystemExit(1)   # non-zero exit → CI fails when a source breaks
+        raise SystemExit(1)  # non-zero exit → CI fails when a source breaks
+
 
 if __name__ == "__main__":
     main()
