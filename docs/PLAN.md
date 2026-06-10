@@ -2,13 +2,14 @@
 
 > Companion to SCOPE.md. This document preserves all technical decisions and conversation context so any new chat in the Claude Project can pick up where the last one left off.
 
-## Current state (as of June 2026)
+## Current state (as of June 10, 2026)
 
 - **Graduation**: complete (MS Applied Data Science, Syracuse iSchool, May 2026)
 - **ProAg engagement**: complete
 - **Active commitments**: HyperQuark Research Fellow + active job search (primary focus)
 - **Handshake AI**: resuming after EAD authorization
 - **Week 2** ✅ — five-source warehouse + CI/CD, both workflows green.
+- **Week 3** ✅ — seven validated regimes (detection + Chow/variance validation + multi-source characterization), regime figure, README section #1 drafted.
 
 ## Sprint structure
 
@@ -39,14 +40,14 @@ Each phase opens a new chat in the Claude Project. SCOPE.md and PLAN.md travel w
 
 ---
 
-### Week 2 — Foundation 🚧 IN PROGRESS
+### Week 2 — Foundation ✅ COMPLETE
 
 **Window**: ~June 1–7, 2026  
 **Time**: 8–10 hours
 
 **Goal**: Repo skeleton, data pipeline, GitHub Actions skeleton.
 
-**Progress**: ✅ Python 3.13 via uv, repo initialized, `docs/` + `CLAUDE.md`/`AGENTS.md` locked, file structure created. ⬜ Data pipeline (healthcheck → 5 sources → DuckDB) and the two GitHub Actions workflows created.
+**Shipped**: Python 3.13 via uv; repo initialized; `docs/` + `CLAUDE.md`/`AGENTS.md` locked; monorepo structure created. Five-source pipeline (yfinance `ZC=F`, USDA WASDE via `curl_cffi` browser impersonation, CFTC COT via `cot_reports`, NOAA Drought Monitor, FRED via `fredapi`) unified into `data/openag.duckdb` through `build_duckdb.py`, with a `fetch()/validate()` interface and cache-first behavior. Both GitHub Actions workflows green: `ci.yml` (ruff + pytest) and `refresh.yml` (scheduled healthcheck + `workflow_dispatch`).
 
 **Tasks**:
 
@@ -60,33 +61,39 @@ Each phase opens a new chat in the Claude Project. SCOPE.md and PLAN.md travel w
 - GitHub Actions workflow #1: skeleton with one trivial test passing
 - GitHub Actions workflow #2: scheduled data refresh (cron, does nothing yet but exists)
 
-**Deliverable**: Clean repo with 5 data sources unified in a single DuckDB file. Actions skeleton visible on the repo's Actions tab.
-
-**Open as new chat**. Topic: "OpenAg Week 2 foundation — repo + data pipeline."
+**Deliverable**: Clean repo with 5 data sources unified in a single DuckDB file. Actions skeleton visible on the repo's Actions tab. ✅
 
 ---
 
-### Week 3 — Regime Analysis
+### Week 3 — Regime Analysis ✅ COMPLETE
 
 **Window**: ~June 8–14, 2026  
-**Time**: 10–12 hours
+**Time**: ~10–12 hours
 
 **Goal**: Empirical regime detection. The notebook that justifies every subsequent modeling decision.
 
- ▶ NEXT: Week 3 regime analysis. First task: parse WASDE ReportDate (text "Month Year") into a real date for the join. Then ruptures changepoint detection on log returns + rolling vol; structural break tests; regime-characterization features. Deliverable: notebooks/01_regime_analysis.ipynb.
+**Shipped (June 10, 2026)**:
 
-**Tasks**:
+- `notebooks/01_regime_analysis.ipynb` — DuckDB load → log returns + 21-day annualized rolling vol → **dual PELT** (variance via `model="normal"` on returns; trend via `l2` on log price) with a **penalty sweep** so the breakpoint count is stability-based, not hand-picked.
+- **Validation**: Chow test on level breaks, F-test on return variance for volatility breaks. Two trend walls — 2021-01-05 (+221¢, p≈1e-210) and 2023-07-31 (−201¢, p≈1e-236) — plus five validated volatility breaks. The Feb-2022 candidate was correctly **rejected** (vol 36%→35%, p=0.85): the Russia-Ukraine invasion was a price/direction move inside an already-high-vol regime, not a new volatility regime.
+- **Characterization**: as-of join (`merge_asof`, backward, no lookahead) of all five sources onto the trading-day calendar; per-regime profile across realized vol, speculative positioning (spec net % OI), drought stress, USD/macro, and WASDE ending stocks. **Seven regimes.**
+- `notebooks/figures/01_regime_structure.png` — annotated regime-structure figure.
+- README section #1 drafted: "Regime structure under uncertainty."
 
-- Changepoint detection with `ruptures` library on log returns and rolling volatility
-- Statistical break tests: Chow test for known break points, supremum Wald for unknown windows
-- Regime characterization features computed: vol percentile, term-structure shape, COT positioning extremity, drought stress index, USD index regime
-- Visualize regime structure across 10y of history
-- Writeup section: where breaks are, what they correspond to (where attributable), magnitude
-- README section #1 drafted
+**Key findings**:
 
-**Deliverable**: `notebooks/01_regime_analysis.ipynb` + README section with figures and findings.
+- **Volatility alone cannot define a regime.** The spring-2021 and spring-2023 bursts are vol-twins (44% vs 43%) but opposite states: specs +26% vs +1% of OI, stocks 36 vs 57 MMT, price rising vs falling. This is the empirical argument for multi-factor regime features.
+- **Reversion found a higher floor**: post-2023 calm ~440¢ vs the 2016–2020 baseline ~366¢ — not a return to the old level.
+- **COVID was not a regime change for corn**: the early-2020 dip is absorbed inside the calm baseline with no break.
+- **Drought level ≠ volatility**: the highest drought reading (2022–23 cooling) coincided with the lowest vol → featurize drought as change/percentile, not raw level.
+- **Coverage asymmetry documented honestly**: CFTC + WASDE begin 2021; calm-era fundamentals are uncovered, not zero.
 
-**Open as new chat**. Topic: "OpenAg Week 3 regime analysis — changepoint detection on corn."
+**Deviations from plan**:
+
+- **Term-structure shape** (planned characterization feature) **deferred to v2** — front-month-only data has no curve slope; needs ≥2 curve points. Parked in `v2-ideas.md`.
+- **Supremum-Wald not implemented** — Chow + variance F-test + the stability sweep are sufficient for v1; sup-Wald stays available if a formal "break-somewhere" test is ever needed.
+
+**Deliverable**: `notebooks/01_regime_analysis.ipynb` + README section with figure and findings. ✅
 
 ---
 
@@ -96,6 +103,8 @@ Each phase opens a new chat in the Claude Project. SCOPE.md and PLAN.md travel w
 **Time**: 10–12 hours
 
 **Goal**: Baseline forecasters + frontend scaffold deployed.
+
+ ▶ NEXT: Week 4 baselines + dashboard scaffold. First task: build the modeling frame from the Week-3 panel (target = 30-day-ahead `ZC=F`; features = the regime/characterization columns already joined). Then naïve baselines (random walk, seasonal naïve, AR(1)) + a vanilla XGBoost forecaster under walk-forward (rolling-origin) evaluation with a per-year breakdown. In parallel: Next.js shell to Vercel (stub data) and FastAPI `/forecast` stub on Render. Deliverable: `notebooks/02_baselines.ipynb` + live stubbed dashboard + live API URL.
 
 **Tasks**:
 
@@ -164,6 +173,8 @@ These are decisions Sid and Claude already made in the originating conversation.
 - 10 years of daily history.
 - Free public sources only: USDA WASDE, USDA NASS Quickstats, yfinance for CME prices, CFTC Commitments of Traders, NOAA US Drought Monitor, FRED.
 - DuckDB for storage (file-based, fast, version-friendly).
+- **Term-structure shape feature deferred to v2** — front-month-only data has no curve slope (needs ≥2 curve points). See `v2-ideas.md`.
+- **WASDE units note**: the ingested US corn ending-stocks series is in **million metric tons** (world-table US line), not million bushels. Irrelevant for modeling (it gets percentiled), but documented so the unit isn't misread.
 
 ### Framing decisions
 
@@ -178,6 +189,8 @@ These are decisions Sid and Claude already made in the originating conversation.
 - **Python version rationale**: 3.13 is the sweet spot — newer than the 3.11 stable floor, fully supported across the data/ML ecosystem, but not the bleeding 3.14 edge (niche monitoring libs lag on new releases, and interpreter-speed gains are marginal for a compiled-extension workload).
 - **Repo layout**: monorepo. Planning docs live in `docs/`; `README.md`, `CLAUDE.md`, and `AGENTS.md` stay at root so agentic coding tools (Claude Code, Codex) pick them up automatically.
 - **Backups**: raw downloads cached and timestamped in `data/raw/` (the precious artifact); the DuckDB file is regenerable from raw and gitignored on main. GitHub is the offsite backup once pushed.
+- **`ruptures`** is the sanctioned new dependency for Week 3 (changepoint detection); `scipy` rides in with it (used for Chow / variance F-tests — no separate dependency). Structural-break tests are hand-rolled, not a new library.
+- **Agentic split**: plan-mode-with-Sonnet + execution-with-Haiku is the proven pattern. Upgrading the planner to Claude Fable 5 for open-ended work (best fit: Week 5 live wiring) is parked in `v2-ideas.md`, not used for pre-specced notebooks.
 
 ## Risks to monitor
 

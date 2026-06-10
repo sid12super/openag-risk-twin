@@ -9,9 +9,11 @@ dependencies = [
     "curl-cffi>=0.15.0",
     "duckdb>=1.5.3",
     "fredapi>=0.5.2",
+    "matplotlib>=3.10.9",
     "pandas>=3.0.3",
     "python-dotenv>=1.2.2",
     "requests>=2.34.2",
+    "ruptures>=1.1.10",
     "yfinance>=1.4.1",
 ]
 
