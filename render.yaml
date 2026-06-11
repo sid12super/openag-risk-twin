@@ -1,10 +1,11 @@
 services:
   - type: web
-    name: openag-risk-twin-api
+    name: openag-api
     runtime: python
-    pythonVersion: 3.13
-    buildCommand: uv sync
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    buildCommand: pip install uv && uv sync --no-dev
+    startCommand: uv run uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
-      - key: ALLOWED_ORIGIN_REGEX
-        value: r"https://.*\.vercel\.app|https://openag-risk-twin\.vercel\.app"
+      - key: PYTHON_VERSION
+        value: "3.13.0"
