@@ -45,3 +45,26 @@ Detection uses front-month price only; term-structure shape (contango/backwardat
 ### Why this feeds the model
 
 These regimes are never handed to the model as discrete labels. They justify a set of **continuous** regime features — volatility percentile, positioning extremity, drought change, macro state — that let a single forecaster condition on the state of the world instead of averaging over incompatible ones. The system's job is to recognize the regime it is in and to widen its uncertainty when that regime is unfamiliar.
+
+## Baselines — the wall before regime features
+ 
+Before adding any regime intelligence, we establish how well simple, honest methods forecast the **30-day-ahead corn return**. The target is the return, not the price level, on purpose: a tree model cannot predict above the prices it trained on, so a level target would flatline straight through the 2021 breakout. Every model is scored under **walk-forward evaluation** — train on the past, predict 30 days forward, slide the origin, never peek — with a 30-day embargo so training targets can't overlap the test window. Out-of-sample spans 2020–2026 (1,586 predictions).
+ 
+The benchmark is the **random walk**: predict a zero return ("no change"). On a near-efficient market it is a stubborn bar, and the skill metric `1 − RMSE_model / RMSE_RW` measures whether anything actually beats it.
+ 
+| Model | RMSE | MAE | Skill vs RW |
+|---|---|---|---|
+| Random walk | 0.0952 | 0.0736 | 0.000 |
+| Seasonal naïve | 0.1199 | 0.0943 | −0.260 |
+| AR(1) | 0.0989 | 0.0764 | −0.039 |
+| Vanilla XGBoost | 0.0980 | 0.0776 | −0.030 |
+ 
+Both naïve methods lose to the random walk: corn's calendar doesn't repeat (seasonal naïve, −26%) and recent momentum carries no usable edge (AR(1), −4%). The vanilla XGBoost — the first model allowed nonlinear structure, but deliberately blind to regime features — also fails to beat the wall in aggregate (−3%, well within the noise of overlapping targets). **Price-only signal does not beat "predict nothing."**
+ 
+![Vanilla XGBoost vs random walk, RMSE improvement by year](notebooks/figures/02_xgb_vs_rw_by_year.png)
+ 
+The aggregate hides the real finding: the vanilla model's skill is **regime-dependent**. It beats the random walk in the trending years — 2021 (breakout), 2023 (roll-over), 2024 (the decline into the lows) — where momentum features have a direction to grab. It loses in shock and calm years — 2020 (choppy pre-breakout), the 2022 Ukraine whipsaw, 2025 (tariff-policy noise), and the 2026 reverted plateau where the random walk is already near-optimal. The model has genuine edge but no idea *when* it has it, so it applies the same confidence in every regime and gets punished half the time.
+ 
+That heterogeneity is the empirical case for the next stage. Regime features give the system awareness of which state it is in — lean on signal in trending regimes, widen uncertainty in shock and calm ones. The dispersion in the figure is exactly the opportunity the regime layer is built to capture, and the vanilla XGBoost RMSE of **0.0980** is the number it must beat.
+ 
+**Caveats, stated plainly.** The 30-day targets overlap heavily, so the effective independent sample is far smaller than 1,586 and the year-to-year swings carry noise — read the pattern, not the third decimal. 2026 is a partial year and its result is the least reliable of the seven. And the honest reading of the whole table is the project's thesis in miniature: forecasting commodity prices is hard, the random walk is hard to beat, and the value of this system is in *quantifying what it doesn't know*, not in a tighter point forecast.
