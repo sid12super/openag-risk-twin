@@ -5,7 +5,19 @@
       "Bash(mkdir -p /mnt/c/Users/siddh/Downloads/OPEN-AG/openag-risk-twin/data/raw)",
       "Bash(mkdir -p /mnt/c/Users/siddh/Downloads/OPEN-AG/openag-risk-twin/notebooks)",
       "Bash(mkdir -p /mnt/c/Users/siddh/Downloads/OPEN-AG/openag-risk-twin/backend)",
-      "Bash(mkdir -p /mnt/c/Users/siddh/Downloads/OPEN-AG/openag-risk-twin/frontend)"
+      "Bash(mkdir -p /mnt/c/Users/siddh/Downloads/OPEN-AG/openag-risk-twin/frontend)",
+      "Bash(uv run *)",
+      "Bash(uv sync *)",
+      "Bash(python -m pip list)",
+      "Bash(uv --version)",
+      "Bash(uv add *)",
+      "Bash(chmod -R u+w .venv)",
+      "Bash(python3 -c \"import shutil; shutil.rmtree\\('.venv', ignore_errors=True\\)\")",
+      "Bash(python3 *)",
+      "Bash(/tmp/openag-venv/bin/pip install *)",
+      "Bash(uv python *)",
+      "Bash(uv venv *)",
+      "Bash(git add *)"
     ]
   }
 }
