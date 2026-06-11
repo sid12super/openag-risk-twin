@@ -1,0 +1,53 @@
+@import url('https://rsms.me/inter/inter.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+
+  --bg: #faf9f6;
+  --surface: #ffffff;
+  --ink: #1a1a17;
+  --muted: #6b6a63;
+  --line: #e4e2da;
+  --accent: #5c6b3c;
+  --band: #c98a2b;
+  --band-fill: rgba(201, 138, 43, 0.16);
+  --live: #4f7a4a;
+  --waking: #b5832e;
+  --down: #a33636;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
