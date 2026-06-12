@@ -25,7 +25,7 @@ async function fetchJson<T>(endpoint: string): Promise<T> {
 }
 
 export const api = {
-  health: () => fetchJson<types.HealthResponse>('/health'),
+  health: () => fetchJson<types.HealthResponse>('/status'),
   forecast: () => fetchJson<types.ForecastResponse>('/forecast'),
   scenario: () => fetchJson<types.ScenarioResponse>('/scenario'),
   modelCard: () => fetchJson<types.ModelCardResponse>('/model-card'),
