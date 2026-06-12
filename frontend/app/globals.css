@@ -3,9 +3,6 @@
 @tailwind utilities;
 
 :root {
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
 
   --bg: #faf9f6;
   --surface: #ffffff;
