@@ -29,7 +29,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+@app.get("/")
+def root():
+    return {"service": "openag-risk-twin", "docs": "/docs", "status": "/status"}
 @app.get("/status", response_model=HealthResponse)
 def health() -> HealthResponse:
     return HealthResponse(status="ok")
