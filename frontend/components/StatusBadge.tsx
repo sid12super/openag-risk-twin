@@ -40,7 +40,7 @@ export function StatusBadge() {
   const statusLabels = { live: '● live', waking: '● waking…', offline: '● offline' };
 
   return (
-    <span className={`px-3 py-1 rounded text-sm font-medium ${statusColors[status]}`}>
+    <span className={`px-3 py-1 rounded text-sm font-medium whitespace-nowrap ${statusColors[status]}`}>
       {statusLabels[status]}
     </span>
   );

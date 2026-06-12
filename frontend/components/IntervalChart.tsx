@@ -61,7 +61,7 @@ export function IntervalChart({ history, interval80, point, asOf, horizonDays }:
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--line)" opacity={0.5} />
-          <XAxis dataKey="date" stroke="var(--muted)" minTickGap={40}
+          <XAxis dataKey="date" stroke="var(--muted)" minTickGap={40} tickFormatter={(d: string) => d.slice(5)}
             tick={{ fontSize: 12, fontFamily: 'var(--font-mono)', fill: 'var(--muted)' }}
             axisLine={{ stroke: 'var(--line)' }} tickLine={false} />
           <YAxis stroke="var(--muted)" domain={['dataMin - 30', 'dataMax + 30']} width={48}

@@ -28,12 +28,14 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[--bg]">
         <header className="border-b border-[--line] bg-[--surface]">
-          <div className="px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
-            <span className="font-display text-lg font-medium text-[--ink]">OpenAg Risk Twin</span>
-            <nav className="flex items-center gap-8">
-              <Link href="/" className="text-sm text-[--ink] hover:text-[--accent] transition-colors">Forecast</Link>
-              <Link href="/scenario" className="text-sm text-[--ink] hover:text-[--accent] transition-colors">Scenario</Link>
-              <Link href="/model-card" className="text-sm text-[--ink] hover:text-[--accent] transition-colors">Model card</Link>
+          <div className="px-6 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between max-w-6xl mx-auto">
+            <span className="font-display text-lg font-medium text-[--ink] whitespace-nowrap">
+              OpenAg Risk Twin
+            </span>
+            <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 md:gap-8">
+              <Link href="/" className="text-sm text-[--ink] hover:text-[--accent] transition-colors whitespace-nowrap">Forecast</Link>
+              <Link href="/scenario" className="text-sm text-[--ink] hover:text-[--accent] transition-colors whitespace-nowrap">Scenario</Link>
+              <Link href="/model-card" className="text-sm text-[--ink] hover:text-[--accent] transition-colors whitespace-nowrap">Model card</Link>
               <StatusBadge />
             </nav>
           </div>
