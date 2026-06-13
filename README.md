@@ -68,3 +68,104 @@ The aggregate hides the real finding: the vanilla model's skill is **regime-depe
 That heterogeneity is the empirical case for the next stage. Regime features give the system awareness of which state it is in — lean on signal in trending regimes, widen uncertainty in shock and calm ones. The dispersion in the figure is exactly the opportunity the regime layer is built to capture, and the vanilla XGBoost RMSE of **0.0980** is the number it must beat.
  
 **Caveats, stated plainly.** The 30-day targets overlap heavily, so the effective independent sample is far smaller than 1,586 and the year-to-year swings carry noise — read the pattern, not the third decimal. 2026 is a partial year and its result is the least reliable of the seven. And the honest reading of the whole table is the project's thesis in miniature: forecasting commodity prices is hard, the random walk is hard to beat, and the value of this system is in *quantifying what it doesn't know*, not in a tighter point forecast.
+## Does regime structure lift the forecast?
+ 
+The vanilla model's per-year skill heterogeneity — beating the random walk in
+trending years (2023, 2024) but losing in calm and shock years (2020, 2022) — is
+the motivating signal for regime-aware features. If the model cannot tell which
+regime it is in, it applies uniform confidence across fundamentally different
+states. The test: do continuous regime features (speculative positioning, ending
+stocks, dollar level, drought dynamics) improve the baseline?
+ 
+### Design
+ 
+A pre-registered test ran three feature sets on identical folds, walk-forward
+setup, and XGBoost hyperparameters (no re-tuning per variant):
+ 
+- **Vanilla (8)**: `ret_1, ret_5, ret_10, ret_21, ret_63, vol_21, sin_doy, cos_doy` — the Week-4 price-only baseline.
+- **Variant A (12)**: Vanilla + `spec_net_pct_oi, stocks_mmt, usd, drought_chg` — four causal regime drivers.
+- **Variant B (14)**: Variant A + `usd_chg_21, drought` — two pre-registered extras.
+Every feature is causal (as-of merge, no future leakage). The seven PELT regime
+labels were deliberately excluded — their boundaries are fit on the full series,
+so using them as features leaks post-t information. NaN (COT and WASDE coverage
+begins 2021) is handled natively by XGBoost; no imputation.
+ 
+### Results
+ 
+| Model | RMSE | Skill vs RW | Δ skill vs vanilla |
+|---|---|---|---|
+| Random walk | 0.0952 | 0.000 | — |
+| Vanilla XGB | 0.0980 | −0.030 | — |
+| Variant A | 0.1031 | −0.083 | −0.053 (worse) |
+| Variant B | 0.1082 | −0.137 | −0.107 (worse) |
+ 
+Vanilla reproduces the Week-4 baseline exactly (0.0980), confirming the harness
+is unchanged and the comparison is valid.
+ 
+![Regime-feature lift test: per-year skill comparison](notebooks/figures/03_regime_lift_by_year.png)
+ 
+**Finding: no lift.** Both regime variants are worse than vanilla on aggregate
+skill (−0.053 and −0.107), and worse the more features are added. But the damage
+is not uniform — it is concentrated, and where it concentrates is the
+interesting part.
+ 
+Per-year skill (2020–2026 OOS; a stray 2019 fold-edge point is excluded):
+ 
+| Year | Vanilla | Variant A | Variant B |
+|---|---|---|---|
+| 2020 | −0.40 | −0.42 | −0.34 |
+| 2021 | −0.13 | −0.10 | −0.48 |
+| 2022 | −0.23 | −0.23 | −0.21 |
+| 2023 | +0.17 | −0.19 | −0.22 |
+| 2024 | +0.38 | +0.32 | +0.32 |
+| 2025 | +0.13 | +0.23 | +0.27 |
+| 2026 | +0.35 | +0.30 | +0.44 |
+ 
+Vanilla beats the random walk in 4 years (2023–2026); A and B in only 3
+(2024–2026). The variants *improve* the most recent years — 2025 and 2026, where
+A and B both lift skill (B is the best model of all in 2026, +0.44) — but inflict
+a large penalty in 2023 (vanilla +0.17 collapses to −0.19/−0.22), and B craters
+2021 (−0.48). Net, the 2023 and 2021 losses outweigh the 2025–26 gains.
+ 
+### Interpretation
+ 
+The variants help where the regime data is fully present and recent (2024–26) and
+hurt across the 2020–2023 stretch. That pattern lines up with the coverage
+asymmetry: speculative positioning and ending stocks only begin in 2021, so the
+regime features are absent or sparse through exactly the transition years where
+the damage concentrates, and only fully informative in the years where they help.
+The structural NaN-then-sparse pattern is plausibly read by the model as signal,
+adding fold-specific noise rather than clarification.
+ 
+Two further reads, stated as hypotheses the experiment is consistent with rather
+than conclusions it proves:
+ 
+- **Little orthogonal signal for a 30-day return.** The price-and-calendar set
+  already carries most of what a tree can use; `ret_63` spans a full quarter and
+  implicitly tracks the slow-moving regime state. On a near-unforecastable target,
+  extra columns mostly supply more spurious split candidates, which the model
+  overfits to individual folds — and the walk-forward punishes that out of sample.
+- **The skill metric is itself regime-sensitive.** `skill = 1 − RMSE/RMSE_rw` has
+  a denominator that swings by regime — the random-walk floor is higher in
+  trending years. Vanilla's apparent edge in 2023–24 may partly reflect that
+  denominator rather than genuine predictive structure. This is a caution about
+  reading per-year skill as "the model is good here," not a proven claim.
+### What this means
+ 
+**For the point forecast:** regime structure is real and detectable, but it does
+not sharpen a nonlinear 30-day prediction in this form. Vanilla stands — simple,
+reproducible, and honest about not beating the random walk overall.
+ 
+**For uncertainty quantification:** this is where regime structure should earn its
+place. A forecaster that knows it is in a calm, fully-covered regime can justify
+tighter bands; one in a sparse or transitional regime should widen them. The value
+is in regime-*conditional* coverage, not the point estimate — which is exactly
+Week 5's next task (quantile regression + conformal calibration). The open
+question carried forward: the regime features that failed as point-forecast inputs
+may still earn a role as *conditioners of the interval*, where their job is
+honest confidence rather than a sharper center.
+ 
+**If revisited:** residualize the regime drivers against the price/calendar
+features before use (test whether any orthogonal component helps), and evaluate
+regime-conditional intervals directly rather than feeding raw drivers into the
+point model — keeping walk-forward as the only validation, never a static holdout.
