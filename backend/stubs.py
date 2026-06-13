@@ -1,5 +1,5 @@
 import random
-from datetime import datetime, timedelta
+from datetime import date as Date, datetime, timedelta
 
 from backend.schemas import (
     Evaluation,
@@ -14,7 +14,6 @@ from backend.schemas import (
 
 def get_forecast() -> ForecastResponse:
     # TODO(Week 5): replace with live DuckDB read
-    as_of = "2026-04-23"
     random.seed(42)  # deterministic history
 
     history = []
@@ -22,17 +21,20 @@ def get_forecast() -> ForecastResponse:
     current_price = 418.0
 
     for i in range(60):
-        date_str = (base_date + timedelta(days=i)).strftime("%Y-%m-%d")
-        history.append(HistoryPoint(date=date_str, close=current_price))
+        current_date = base_date + timedelta(days=i)
+        history.append(HistoryPoint(date=current_date.date(), close=current_price))
         current_price += random.uniform(-1.0, 1.0)
+
+    as_of = history[-1].date
+    last_price = history[-1].close
 
     return ForecastResponse(
         as_of=as_of,
         horizon_days=30,
-        last_price=421.0,
+        last_price=last_price,
         point=423.0,
         interval_80=Interval80(low=388.0, high=460.0),
-        regime=Regime(label="reverted", vol_pct=21.0),
+        regime=Regime(label="low_23_26", vol_pct=21.0),
         history=history,
     )
 
@@ -40,9 +42,14 @@ def get_forecast() -> ForecastResponse:
 def get_scenario() -> ScenarioResponse:
     # TODO(Week 5): replace with Kimi K2.6 LLM call
     return ScenarioResponse(
-        as_of="2026-04-23",
-        regime="reverted",
-        narrative="Corn sits in a low-volatility, reverted regime: prices have settled to a higher post-2021 floor near 420 cents, speculative positioning is roughly flat, and ending stocks are ample. Absent a weather or policy shock, the 30-day outlook is range-bound with modest downside skew.",
+        as_of=Date(2026, 4, 23),
+        regime="low_23_26",
+        narrative=(
+            "Corn sits in a low-volatility, reverted regime: prices have settled "
+            "to a higher post-2021 floor near 420 cents, speculative positioning is "
+            "roughly flat, and ending stocks are ample. Absent a weather or policy "
+            "shock, the 30-day outlook is range-bound with modest downside skew."
+        ),
         source="stub",
     )
 
@@ -84,5 +91,8 @@ def get_model_card() -> ModelCardResponse:
             "NOAA Drought Monitor",
             "FRED",
         ],
-        framing="Risk-management infrastructure under regime uncertainty. Not a point-accuracy price predictor.",
+        framing=(
+            "Risk-management infrastructure under regime uncertainty. "
+            "Not a point-accuracy price predictor."
+        ),
     )

@@ -1,3 +1,27 @@
+// Canonical regime labels (machine labels from the detector)
+export type RegimeLabel =
+  | "calm_16_21"
+  | "breakout_21"
+  | "burst_spr21"
+  | "high_21_22"
+  | "cooling_22_23"
+  | "burst_spr23"
+  | "low_23_26";
+
+// Scenario source
+export type ScenarioSource = "stub" | "kimi-k2.6";
+
+// Regime display names (machine label → human-readable name)
+export const REGIME_DISPLAY_NAMES: Record<RegimeLabel, string> = {
+  calm_16_21: "Calm (2016–21)",
+  breakout_21: "Breakout (2021)",
+  burst_spr21: "Spring Burst (2021)",
+  high_21_22: "Sustained High (2021–22)",
+  cooling_22_23: "Cooling (2022–23)",
+  burst_spr23: "Spring Burst (2023)",
+  low_23_26: "Reverted (2023–26)",
+};
+
 export interface HealthResponse {
   status: string;
 }
@@ -8,7 +32,7 @@ export interface Interval80 {
 }
 
 export interface Regime {
-  label: string;
+  label: RegimeLabel;
   vol_pct: number;
 }
 
@@ -46,7 +70,7 @@ export interface ModelCardResponse {
 
 export interface ScenarioResponse {
   as_of: string;
-  regime: string;
+  regime: RegimeLabel;
   narrative: string;
-  source: string;
+  source: ScenarioSource;
 }

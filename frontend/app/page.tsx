@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
-import { ForecastResponse } from '@/lib/types';
+import { ForecastResponse, REGIME_DISPLAY_NAMES } from '@/lib/types';
 import { Loading } from '@/components/Loading';
 import { ErrorState } from '@/components/ErrorState';
 import { MetricReadout } from '@/components/MetricReadout';
@@ -54,7 +54,7 @@ export default function ForecastPage() {
           <div className="flex items-center gap-2">
             <span className="text-xs uppercase tracking-widest text-[--muted]">Regime</span>
             <span className="font-mono text-sm font-medium text-[--ink] tabular-nums">
-              {data.regime.label}
+              {REGIME_DISPLAY_NAMES[data.regime.label]}
             </span>
           </div>
           <div className="w-24 h-4 bg-[--line] rounded overflow-hidden">

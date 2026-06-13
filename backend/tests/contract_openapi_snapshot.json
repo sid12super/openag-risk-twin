@@ -1,0 +1,361 @@
+{
+  "components": {
+    "schemas": {
+      "Evaluation": {
+        "properties": {
+          "oos_period": {
+            "title": "Oos Period",
+            "type": "string"
+          },
+          "per_year_rmse": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "keys are 4-digit year strings 2020..2026",
+            "title": "Per Year Rmse",
+            "type": "object"
+          },
+          "rmse": {
+            "title": "Rmse",
+            "type": "number"
+          },
+          "skill_vs_rw": {
+            "description": "1 - RMSE/RMSE_rw; negative = worse than RW",
+            "title": "Skill Vs Rw",
+            "type": "number"
+          }
+        },
+        "required": [
+          "oos_period",
+          "rmse",
+          "skill_vs_rw",
+          "per_year_rmse"
+        ],
+        "title": "Evaluation",
+        "type": "object"
+      },
+      "ForecastResponse": {
+        "properties": {
+          "as_of": {
+            "description": "forecast anchor date; == history[-1].date",
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryPoint"
+            },
+            "minItems": 1,
+            "title": "History",
+            "type": "array"
+          },
+          "horizon_days": {
+            "description": "forecast horizon; v1 is 30 only",
+            "title": "Horizon Days",
+            "type": "integer"
+          },
+          "interval_80": {
+            "$ref": "#/components/schemas/Interval80"
+          },
+          "last_price": {
+            "description": "close on as_of, price in cents; == history[-1].close",
+            "title": "Last Price",
+            "type": "number"
+          },
+          "point": {
+            "description": "point (median) forecast, price in cents",
+            "title": "Point",
+            "type": "number"
+          },
+          "regime": {
+            "$ref": "#/components/schemas/Regime"
+          }
+        },
+        "required": [
+          "as_of",
+          "horizon_days",
+          "last_price",
+          "point",
+          "interval_80",
+          "regime",
+          "history"
+        ],
+        "title": "ForecastResponse",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "HistoryPoint": {
+        "properties": {
+          "close": {
+            "description": "settlement close, price in cents",
+            "title": "Close",
+            "type": "number"
+          },
+          "date": {
+            "description": "trading day, ISO YYYY-MM-DD; ascending in history[]",
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "close"
+        ],
+        "title": "HistoryPoint",
+        "type": "object"
+      },
+      "Interval80": {
+        "description": "80% prediction interval, in PRICE (cents).\n\nLive: low = last_price * exp(q10_return); high = last_price * exp(q90_return).\nNever the raw return quantiles.",
+        "properties": {
+          "high": {
+            "description": "80% interval upper bound, price in cents",
+            "title": "High",
+            "type": "number"
+          },
+          "low": {
+            "description": "80% interval lower bound, price in cents",
+            "title": "Low",
+            "type": "number"
+          }
+        },
+        "required": [
+          "low",
+          "high"
+        ],
+        "title": "Interval80",
+        "type": "object"
+      },
+      "ModelCardResponse": {
+        "properties": {
+          "data_sources": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Data Sources",
+            "type": "array"
+          },
+          "evaluation": {
+            "$ref": "#/components/schemas/Evaluation"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Features",
+            "type": "array"
+          },
+          "framing": {
+            "title": "Framing",
+            "type": "string"
+          },
+          "horizon_days": {
+            "title": "Horizon Days",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "horizon_days",
+          "target",
+          "features",
+          "evaluation",
+          "data_sources",
+          "framing"
+        ],
+        "title": "ModelCardResponse",
+        "type": "object"
+      },
+      "Regime": {
+        "properties": {
+          "label": {
+            "enum": [
+              "calm_16_21",
+              "breakout_21",
+              "burst_spr21",
+              "high_21_22",
+              "cooling_22_23",
+              "burst_spr23",
+              "low_23_26"
+            ],
+            "title": "Label",
+            "type": "string"
+          },
+          "vol_pct": {
+            "description": "realized-vol percentile rank, 0-100 (NOT 0-1)",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Vol Pct",
+            "type": "number"
+          }
+        },
+        "required": [
+          "label",
+          "vol_pct"
+        ],
+        "title": "Regime",
+        "type": "object"
+      },
+      "ScenarioResponse": {
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "narrative": {
+            "title": "Narrative",
+            "type": "string"
+          },
+          "regime": {
+            "enum": [
+              "calm_16_21",
+              "breakout_21",
+              "burst_spr21",
+              "high_21_22",
+              "cooling_22_23",
+              "burst_spr23",
+              "low_23_26"
+            ],
+            "title": "Regime",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "stub",
+              "kimi-k2.6"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "as_of",
+          "regime",
+          "narrative",
+          "source"
+        ],
+        "title": "ScenarioResponse",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "OpenAg Risk Twin",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Root"
+      }
+    },
+    "/forecast": {
+      "get": {
+        "operationId": "forecast_forecast_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Forecast"
+      }
+    },
+    "/model-card": {
+      "get": {
+        "operationId": "model_card_model_card_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelCardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Model Card"
+      }
+    },
+    "/scenario": {
+      "get": {
+        "operationId": "scenario_scenario_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Scenario"
+      }
+    },
+    "/status": {
+      "get": {
+        "operationId": "health_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    }
+  }
+}

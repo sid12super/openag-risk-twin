@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
-import { ScenarioResponse } from '@/lib/types';
+import { ScenarioResponse, REGIME_DISPLAY_NAMES } from '@/lib/types';
 import { Loading } from '@/components/Loading';
 import { ErrorState } from '@/components/ErrorState';
 
@@ -47,7 +47,7 @@ export default function ScenarioPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-widest text-[--muted]">
-          SCENARIO · {data.regime} REGIME
+          SCENARIO · {REGIME_DISPLAY_NAMES[data.regime]}
         </p>
         <span className="text-xs uppercase tracking-widest bg-[--line] text-[--muted] px-3 py-1 rounded">
           {data.source}
