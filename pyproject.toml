@@ -10,6 +10,7 @@ dependencies = [
     "duckdb>=1.5.3",
     "fastapi>=0.104.0",
     "fredapi>=0.5.2",
+    "mapie>=1.0.0,<2.0.0",
     "matplotlib>=3.10.9",
     "pandas>=3.0.3",
     "python-dotenv>=1.2.2",
