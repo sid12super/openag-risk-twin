@@ -699,6 +699,20 @@ wheels = [
 ]
 
 [[package]]
+name = "mapie"
+version = "1.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f3/07/d7fb5c16f792432a028ceffc103ddc18155785c5d163296a632cfaeec5f6/mapie-1.4.1.tar.gz", hash = "sha256:3d174aa6a91b3af34a26654fcd1e4239e5d44fa8f37ecc34f739a00d4ecdc2dc", size = 16999707, upload-time = "2026-06-08T13:22:29.209Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/31/e3/01c64297e98676c3ac58d141ea0149464c7ed02d0160ef68c94f23756a2e/mapie-1.4.1-py3-none-any.whl", hash = "sha256:cb79bd98d30d3d370d2c74bc04e0f0d8ccfb1e90973d9773c0c9e956c4d1046b", size = 271613, upload-time = "2026-06-08T13:22:27.235Z" },
+]
+
+[[package]]
 name = "markdown-it-py"
 version = "4.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -874,6 +888,7 @@ dependencies = [
     { name = "duckdb" },
     { name = "fastapi" },
     { name = "fredapi" },
+    { name = "mapie" },
     { name = "matplotlib" },
     { name = "pandas" },
     { name = "python-dotenv" },
@@ -900,6 +915,7 @@ requires-dist = [
     { name = "duckdb", specifier = ">=1.5.3" },
     { name = "fastapi", specifier = ">=0.104.0" },
     { name = "fredapi", specifier = ">=0.5.2" },
+    { name = "mapie", specifier = ">=1.0.0,<2.0.0" },
     { name = "matplotlib", specifier = ">=3.10.9" },
     { name = "pandas", specifier = ">=3.0.3" },
     { name = "python-dotenv", specifier = ">=1.2.2" },

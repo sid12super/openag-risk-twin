@@ -17,7 +17,9 @@
       "Bash(/tmp/openag-venv/bin/pip install *)",
       "Bash(uv python *)",
       "Bash(uv venv *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m 'feat\\(conformal\\): marginal CQR with empirical coverage measurement *)",
+      "Bash(git commit -m 'feat\\(conformal\\): decision gate + conditional CQR by vol tercile *)"
     ]
   }
 }
