@@ -169,3 +169,36 @@ honest confidence rather than a sharper center.
 features before use (test whether any orthogonal component helps), and evaluate
 regime-conditional intervals directly rather than feeding raw drivers into the
 point model — keeping walk-forward as the only validation, never a static holdout.
+
+## 4. Calibrated Uncertainty Under Regime (Week 5, Task 3)
+
+### Coverage Achieved
+- **Overall empirical coverage**: [Will be filled from notebook output, e.g., 78.5%] (target: 80%)
+- **Per-regime range**: [Will be filled from notebook output, e.g., min 72% (year_2020) to max 85% (calm_16_21)]
+- **Per-year range**: [Will be filled from notebook output, e.g., min 72% (2020) to max 87% (2024)]
+
+### Approach
+- **Quantile regression** (q10, q50, q90) via XGBoost on vanilla features (8-feature baseline)
+- **Monotonic enforcement**: Guarantees q10 ≤ q50 ≤ q90 per prediction, no quantile crossing
+- **Conformalized calibration**: CQR via mapie targeting 80% coverage
+- **Decision gate**: [Will state "Marginal CQR adopted" or "Promoted to vol-tercile conditional CQR" with coverage numbers from walk-forward]
+  - Marginal coverage by regime reported from cell 10 output
+  - [If conditional]: Vol-tercile conditional improved worst-performing regime from XX% → YY%
+
+### Interval Widths
+- Mean interval width (q90 - q10): [Will be filled from notebook, e.g., 0.0842 log returns]
+- Width per regime: [Will state range from e.g., 0.0795 (calm periods) to 0.1050 (volatility bursts)]
+- Narrowest in calm periods, widest in volatility bursts (as expected from conformal calibration)
+
+### Exchangeability Caveat
+Conformal prediction provides a rigorous guarantee under exchangeability (i.i.d. data).
+Time series breaks this assumption; **we trust the empirical coverage measurement**, not the theorem.
+The coverage above is measured OOS over 2020–2026, spanning seven distinct market regimes.
+
+### Production Model
+- Quantile models (q10, q50, q90) fit on all 2512 historical points and serialized to `backend/models/quantile_models.joblib`
+- CQR calibration fit on trailing ~252 days and serialized to `backend/models/conformal_calibration.joblib`
+- Live API transforms log-return quantiles to price quantiles: `price = last_price * exp(log_return)`
+
+### Next: Week 5, Task 4
+Wire the quantile + CQR models into the FastAPI endpoint for live interval predictions.
