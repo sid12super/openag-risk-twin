@@ -11,13 +11,11 @@ This script:
 7. Outputs final coverage summary tables
 """
 
-import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
 import xgboost as xgb
 import joblib
-import matplotlib.pyplot as plt
 import duckdb
 
 # Locate root
@@ -141,7 +139,7 @@ production_cqr = {
     "note": "Marginal CQR corrections (alpha=0.2, target coverage 80%)",
 }
 
-print(f"✓ CQR corrections computed:")
+print("✓ CQR corrections computed:")
 print(f"    q10 correction: {correction_q10:.6f}")
 print(f"    q90 correction: {correction_q90:.6f}")
 
