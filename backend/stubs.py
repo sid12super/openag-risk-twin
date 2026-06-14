@@ -1,42 +1,38 @@
-import random
-from datetime import date as Date, datetime, timedelta
+import json
+from datetime import date as Date
+from pathlib import Path
 
-from backend.schemas import (
-    Evaluation,
-    ForecastResponse,
-    HistoryPoint,
-    Interval80,
-    ModelCardResponse,
-    Regime,
-    ScenarioResponse,
-)
+from backend.schemas import ForecastResponse, ModelCardResponse, ScenarioResponse
+
+
+def get_forecast_data_path() -> Path:
+    """Locate forecast.json in the backend/data directory."""
+    root = next(
+        p for p in [Path.cwd(), *Path.cwd().parents] if (p / "pyproject.toml").exists()
+    )
+    return root / "backend" / "data" / "forecast.json"
+
+
+def get_model_card_data_path() -> Path:
+    """Locate model_card.json in the backend/data directory."""
+    root = next(
+        p for p in [Path.cwd(), *Path.cwd().parents] if (p / "pyproject.toml").exists()
+    )
+    return root / "backend" / "data" / "model_card.json"
 
 
 def get_forecast() -> ForecastResponse:
-    # TODO(Week 5): replace with live DuckDB read
-    random.seed(42)  # deterministic history
+    """Load the committed forecast.json and validate against the frozen contract."""
+    forecast_path = get_forecast_data_path()
 
-    history = []
-    base_date = datetime(2026, 2, 23)
-    current_price = 418.0
+    if not forecast_path.exists():
+        raise FileNotFoundError(
+            f"forecast.json not found at {forecast_path}. "
+            "Run pipeline/generate_forecast.py to create it."
+        )
 
-    for i in range(60):
-        current_date = base_date + timedelta(days=i)
-        history.append(HistoryPoint(date=current_date.date(), close=current_price))
-        current_price += random.uniform(-1.0, 1.0)
-
-    as_of = history[-1].date
-    last_price = history[-1].close
-
-    return ForecastResponse(
-        as_of=as_of,
-        horizon_days=30,
-        last_price=last_price,
-        point=423.0,
-        interval_80=Interval80(low=388.0, high=460.0),
-        regime=Regime(label="low_23_26", vol_pct=21.0),
-        history=history,
-    )
+    data = json.loads(forecast_path.read_text())
+    return ForecastResponse(**data)
 
 
 def get_scenario() -> ScenarioResponse:
@@ -55,44 +51,14 @@ def get_scenario() -> ScenarioResponse:
 
 
 def get_model_card() -> ModelCardResponse:
-    # TODO(Week 5): replace with live metadata from model + evaluation cache
-    return ModelCardResponse(
-        model="XGBoost (single; regime-aware in v1.0)",
-        horizon_days=30,
-        target="30-day log return",
-        features=[
-            "ret_1",
-            "ret_5",
-            "ret_10",
-            "ret_21",
-            "ret_63",
-            "vol_21",
-            "sin_doy",
-            "cos_doy",
-        ],
-        evaluation=Evaluation(
-            oos_period="2020-2026",
-            rmse=0.098,
-            skill_vs_rw=-0.03,
-            per_year_rmse={
-                "2020": 0.1332,
-                "2021": 0.1072,
-                "2022": 0.1171,
-                "2023": 0.0786,
-                "2024": 0.0589,
-                "2025": 0.0826,
-                "2026": 0.0614,
-            },
-        ),
-        data_sources=[
-            "yfinance ZC=F",
-            "USDA WASDE",
-            "CFTC COT",
-            "NOAA Drought Monitor",
-            "FRED",
-        ],
-        framing=(
-            "Risk-management infrastructure under regime uncertainty. "
-            "Not a point-accuracy price predictor."
-        ),
-    )
+    """Load the committed model_card.json and validate against the frozen contract."""
+    model_card_path = get_model_card_data_path()
+
+    if not model_card_path.exists():
+        raise FileNotFoundError(
+            f"model_card.json not found at {model_card_path}. "
+            "Run pipeline/generate_forecast.py to create it."
+        )
+
+    data = json.loads(model_card_path.read_text())
+    return ModelCardResponse(**data)
