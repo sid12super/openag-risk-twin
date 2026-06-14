@@ -201,4 +201,86 @@ The coverage above is measured OOS over 2020–2026, spanning seven distinct mar
 - Live API transforms log-return quantiles to price quantiles: `price = last_price * exp(log_return)`
 
 ### Next: Week 5, Task 4
-Wire the quantile + CQR models into the FastAPI endpoint for live interval predictions.
+Wire the quantile + CQR models into the FastAPI endpoint for live interval predictions.## Calibrated uncertainty: does the interval mean what it says?
+
+The lift test established that the point forecast has no skill — vanilla XGBoost
+loses to the random walk, and regime features don't change that. So the value of
+this system was never going to be a sharper guess; it's an interval you can trust.
+This section asks the only question that matters for that claim: does the 80%
+prediction interval actually contain the outcome 80% of the time?
+
+### Method
+
+The interval comes from quantile regression (XGBoost, q10/q50/q90 on the vanilla
+feature set) wrapped in Conformalized Quantile Regression (CQR). Three choices
+define it:
+
+- **The point is anchored at the random walk** — a zero forward return, i.e. "no
+  change." Because the lift test showed no directional skill, letting the model
+  predict a drift it can't actually forecast only biases the band; the honest
+  center is no-change, and the interval is built around it.
+- **CQR calibrates the width from data, not from an assumption.** One signed
+  conformity score per calibration point, a single finite-sample-adjusted (1−α)
+  quantile of those scores gives one correction `Q`, applied symmetrically. The
+  calibration set is a trailing ~1-year slice within each fold — never a random
+  split, because this is time series. Quantiles are sorted to prevent crossing.
+- **Evaluation is walk-forward** (rolling-origin, expanding window, step 21, 30-day
+  embargo), 1,586 out-of-sample points across 2020–2026.
+
+### Results
+
+Overall coverage lands at **80.8%** against the 80% target, with a mean interval
+width of 0.25 in log-return space — roughly ±12% over 30 days, which is in line
+with corn's realized volatility. The interval is calibrated.
+
+| Regime | Coverage | n | Width |
+|---|---|---|---|
+| calm_16_21 | 67.7% | 254 | 0.25 |
+| breakout_21 | 74.3% | 70 | 0.30 |
+| burst_spr21 | 60.0% | 65 | 0.34 |
+| high_21_22 | 80.0% | 295 | 0.32 |
+| cooling_22_23 | 94.4% | 160 | 0.27 |
+| burst_spr23 | 36.4% | 55 | 0.21 |
+| low_23_26 | 89.1% | 687 | 0.20 |
+
+### What the per-regime coverage reveals
+
+The headline 80.8% hides a story worth telling honestly. The interval is
+well-calibrated overall and in `low_23_26` (89%, slightly conservative) — the
+current regime, and the one the live system actually operates in. It under-covers
+the short, violent spring bursts of 2021 and 2023, which are high-volatility,
+strongly directional moves a single global band can't stretch to reach while
+staying honest in calmer regimes — compounded by how little high-volatility history
+exists to calibrate against. And it sits at ~68% across 2020: early that year
+looked calm by every trailing measure right up to the COVID crash, and no method
+conditioned on trailing data can size a band for a shock the trailing data doesn't
+contain. That last one is not a bug to fix; it's the exchangeability assumption
+breaking in plain view.
+
+### Did regime-conditioning help?
+
+The natural next move — give each volatility regime its own width — was tested with
+vol-tercile (Mondrian) CQR. It improved the regimes that had enough high-vol history
+to calibrate against (`burst_spr23` 36→65%, `low_23_26` 89→84%) but collapsed
+`burst_spr21` (60→37%), because spring 2021 has almost no prior high-vol data to
+populate a high-vol calibration bucket. Overall it came in slightly below nominal
+(78.9%). It relocated the unevenness rather than removing it, so v1 ships the
+marginal model. Conditioning is a documented v2 candidate, worth revisiting once
+more high-volatility history has accumulated to make the per-regime buckets stable.
+
+### The exchangeability caveat
+
+Conformal prediction's coverage guarantee assumes exchangeability; time series
+violates it through dependence, drift, and regime shifts. So the guarantee on paper
+is weaker than the textbook promises, and the empirical coverage measured on the
+walk-forward — not the theorem — is what we trust. The numbers above are that
+empirical validation.
+
+### What this means
+
+The point forecast is deliberately the random walk: the system makes no claim to
+predict direction, because the evidence says it can't. Its contribution is an
+interval that means what it says about 80% of the time, with honest, documented
+exceptions in violent bursts and true regime shocks. That is the whole thesis made
+concrete — risk-management infrastructure under regime uncertainty is not a sharper
+prediction, it's calibrated honesty about what isn't known.
