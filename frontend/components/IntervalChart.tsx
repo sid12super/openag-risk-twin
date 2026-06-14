@@ -64,7 +64,9 @@ export function IntervalChart({ history, interval80, point, asOf, horizonDays }:
           <XAxis dataKey="date" stroke="var(--muted)" minTickGap={40} tickFormatter={(d: string) => d.slice(5)}
             tick={{ fontSize: 12, fontFamily: 'var(--font-mono)', fill: 'var(--muted)' }}
             axisLine={{ stroke: 'var(--line)' }} tickLine={false} />
-          <YAxis stroke="var(--muted)" domain={['dataMin - 30', 'dataMax + 30']} width={48}
+          <YAxis stroke="var(--muted)" domain={['dataMin - 30', 'dataMax + 30']} width={52}
+            allowDecimals={false}
+            tickFormatter={(v) => Math.round(v).toString()}
             tick={{ fontSize: 12, fontFamily: 'var(--font-mono)', fill: 'var(--muted)' }}
             axisLine={{ stroke: 'var(--line)' }} tickLine={false} />
           <Tooltip content={<CustomTooltip />} />

@@ -195,7 +195,7 @@ def generate_forecast_json(
 def generate_model_card_json() -> dict:
     """Generate the model card JSON payload from fixed metadata."""
     model_card_dict = {
-        "model": "XGBoost (single; vanilla features only)",
+        "model": "Random-walk point + XGBoost quantile interval (CQR-calibrated)",
         "horizon_days": 30,
         "target": "30-day log return",
         "features": [
@@ -230,8 +230,10 @@ def generate_model_card_json() -> dict:
             "FRED",
         ],
         "framing": (
-            "Risk-management infrastructure under regime uncertainty. "
-            "Not a point-accuracy price predictor."
+            "Risk-management infrastructure under regime uncertainty, not a point-accuracy "
+            "predictor. The point forecast is the random walk — XGBoost showed no point-skill "
+            "over it (-0.03 vs RW) — while XGBoost quantile regression with conformal (CQR) "
+            "calibration produces the 80% interval."
         ),
     }
 

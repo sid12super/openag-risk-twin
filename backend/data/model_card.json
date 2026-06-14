@@ -1,5 +1,5 @@
 {
-  "model": "XGBoost (single; vanilla features only)",
+  "model": "Random-walk point + XGBoost quantile interval (CQR-calibrated)",
   "horizon_days": 30,
   "target": "30-day log return",
   "features": [
@@ -33,5 +33,5 @@
     "NOAA Drought Monitor",
     "FRED"
   ],
-  "framing": "Risk-management infrastructure under regime uncertainty. Not a point-accuracy price predictor."
+  "framing": "Risk-management infrastructure under regime uncertainty, not a point-accuracy predictor. The point forecast is the random walk \u2014 XGBoost showed no point-skill over it (-0.03 vs RW) \u2014 while XGBoost quantile regression with conformal (CQR) calibration produces the 80% interval."
 }
