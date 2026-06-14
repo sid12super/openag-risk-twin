@@ -1,0 +1,37 @@
+{
+  "model": "XGBoost (single; vanilla features only)",
+  "horizon_days": 30,
+  "target": "30-day log return",
+  "features": [
+    "ret_1",
+    "ret_5",
+    "ret_10",
+    "ret_21",
+    "ret_63",
+    "vol_21",
+    "sin_doy",
+    "cos_doy"
+  ],
+  "evaluation": {
+    "oos_period": "2020-2026",
+    "rmse": 0.098,
+    "skill_vs_rw": -0.0303,
+    "per_year_rmse": {
+      "2020": 0.1332,
+      "2021": 0.1072,
+      "2022": 0.1171,
+      "2023": 0.0786,
+      "2024": 0.0589,
+      "2025": 0.0826,
+      "2026": 0.0614
+    }
+  },
+  "data_sources": [
+    "yfinance ZC=F",
+    "USDA WASDE",
+    "CFTC COT",
+    "NOAA Drought Monitor",
+    "FRED"
+  ],
+  "framing": "Risk-management infrastructure under regime uncertainty. Not a point-accuracy price predictor."
+}

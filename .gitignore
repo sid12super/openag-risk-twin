@@ -2,7 +2,7 @@
 .env
 
 # Data (raw downloads cached; DuckDB regenerable from raw)
-data/
+/data/
 annual.txt
 
 # Python-generated files
