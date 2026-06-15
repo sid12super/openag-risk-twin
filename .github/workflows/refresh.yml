@@ -27,6 +27,9 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: uv run python -m pipeline.build_duckdb
 
+      - name: Build modeling panel
+        run: uv run python -m pipeline.build_panel
+
       - name: Generate forecast + model card
         run: uv run python -m pipeline.generate_forecast
 
