@@ -1,33 +1,43 @@
-# .github/workflows/refresh.yml
 name: refresh
+
 on:
   schedule:
-    - cron: "17 23 * * 1-5"   # 23:17 UTC weekdays — offset off the top of the hour
-  workflow_dispatch: {}        # lets you trigger it by hand to test
+    - cron: "0 12 * * 1-5"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.13"
       - run: uv sync
-      - run: uv run python pipeline/generate_forecast.py
+
+      - name: Rebuild data warehouse
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-      - name: Commit generated forecast and model card if changed
-        run: |
-          git config user.name "OpenAg Bot"
-          git config user.email "bot@openag.local"
+        run: uv run python -m pipeline.build_duckdb
 
-          # Check if backend/data/*.json files changed
-          if git diff --quiet backend/data/; then
-            echo "No changes to forecast data; skipping commit."
+      - name: Generate forecast + model card
+        run: uv run python -m pipeline.generate_forecast
+
+      - name: Commit refreshed artifacts
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backend/data/forecast.json backend/data/model_card.json
+          if git diff --staged --quiet; then
+            echo "No changes — skipping commit."
           else
-            git add backend/data/forecast.json backend/data/model_card.json
-            git commit -m "chore: regenerate forecast and model card" || echo "Nothing to commit"
+            git commit -m "chore(data): daily forecast refresh"
             git push
           fi
