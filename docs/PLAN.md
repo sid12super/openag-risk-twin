@@ -2,17 +2,20 @@
 
 > Companion to SCOPE.md. This document preserves all technical decisions and conversation context so any new chat in the Claude Project can pick up where the last one left off.
 
-## Current state (as of June 11, 2026)
+## Current state (as of June 15, 2026) — **v1.0.0 SHIPPED**
 
 - **Graduation**: complete (MS Applied Data Science, Syracuse iSchool, May 2026)
 - **ProAg engagement**: complete
 - **Active commitments**: HyperQuark Research Fellow + active job search (primary focus)
-- **Handshake AI**: resuming after EAD authorization
+- **Week 1** [done] — domain research, `RESEARCH_NOTES.md`.
 - **Week 2** [done] — five-source warehouse + CI/CD, both workflows green.
-- **Week 3** [done] — seven validated regimes (detection + Chow/variance validation + multi-source characterization), regime figure, README section #1 drafted.
-- **Week 4** [done] — baselines notebook + live stubbed dashboard + live API. Live URLs:
+- **Week 3** [done] — seven validated regimes (detection + Chow/variance validation + multi-source characterization), regime figure, README section #1.
+- **Week 4** [done] — baselines notebook + live stubbed dashboard + live API.
+- **Week 5** [done] — contract-lock, regime lift test (no-lift result), conformal calibration, live wiring via precompute-at-refresh, daily auto-refresh, Kimi K2.6 scenario layer. **MSV live and tagged `v1.0.0`.**
+- **Live URLs**:
   - API: https://openag-risk-twin.onrender.com (`/docs`)
   - Dashboard: https://openag-risk-twin.vercel.app
+- **Remaining**: blog post draft (in progress, Sid-authored). Everything else in SCOPE's success criteria is live.
 
 ## Sprint structure
 
@@ -65,122 +68,107 @@ Each phase opens a new chat in the Claude Project. SCOPE.md and PLAN.md travel w
 
 **Deliverable**: `notebooks/01_regime_analysis.ipynb` + README section with figure and findings. [done]
 
+> **Note (Week 5):** the panel-construction logic in this notebook (the `merge_asof` joins + the pinned regime breaks) was later extracted into `pipeline/build_panel.py` — the canonical panel builder. If the breaks or features change, edit the script and mirror here.
+
 ---
 
 ### Week 4 — Baselines + Dashboard Shell [COMPLETE]
 
-**Window**: ~June 15-21, 2026
-**Time**: ~12-14 hours (incl. environment/deploy debugging)
-
-**Goal**: Baseline forecasters + frontend scaffold deployed.
-
 **Shipped (June 11, 2026)**:
 
-- `notebooks/02_baselines.ipynb` — modeling frame built from the Week-3 panel. **Target = 30-day forward log return** (not price level — trees can't extrapolate above the training range, so a level target would flatline through breakouts). Vanilla model uses **price + calendar features only** (`ret_1/5/10/21/63`, `vol_21`, `sin_doy`, `cos_doy`); regime/exogenous columns are deliberately benched for the Week-5 lift test. Walk-forward (rolling-origin, expanding window, step=21, 30-day embargo so train/test targets never overlap).
-- **Results (76 folds, OOS 2020-2026, skill = 1 - RMSE/RMSE_rw)**: random walk RMSE **0.0952** (the floor); seasonal naive 0.1199 (-26%); AR(1) 0.0989 (-4%); **vanilla XGBoost 0.0980 (-3%)**. None beats the random walk overall — the honest "price-only signal doesn't beat the wall" result. But XGBoost's skill is **regime-dependent** per-year: it beats RW in the trending years (2021/2023/2024) and loses in shock/calm years (2020/2022/2025/26). That asymmetry is the empirical hook for Week-5 regime features.
-- `notebooks/figures/02_xgb_vs_rw_by_year.png` + README section #2 drafted.
-- **FastAPI stub backend live on Render**: https://openag-risk-twin.onrender.com — endpoints `/status`, `/forecast`, `/scenario`, `/model-card`, `/docs`. Contracts + stub data only; **zero live LLM/data calls** (those are Week 5; `/scenario` returns `"source":"stub"`). `render.yaml` IaC (uv build, `healthCheckPath: /status`), CORS via env-var `ALLOWED_ORIGIN_REGEX` (allows `*.vercel.app`). httpx added as a dev dep for the FastAPI TestClient.
-- **Next.js dashboard shell live on Vercel**: https://openag-risk-twin.vercel.app — three views (forecast, scenario explorer, model card) + a polling health-status badge, reading the live API on stub data via `NEXT_PUBLIC_API_URL`. Design: instrument aesthetic — uncertainty-band **cone** as the signature visual, IBM Plex Mono (tabular) for all figures via `next/font`, olive accent with amber reserved for uncertainty. Client-side fetch with loading/error/cold-start states; responsive header.
+- `notebooks/02_baselines.ipynb` — modeling frame built from the Week-3 panel. **Target = 30-day forward log return** (not price level — trees can't extrapolate above the training range, so a level target would flatline through breakouts). Vanilla model uses **price + calendar features only** (`ret_1/5/10/21/63`, `vol_21`, `sin_doy`, `cos_doy`); regime/exogenous columns deliberately benched for the Week-5 lift test. Walk-forward (rolling-origin, expanding window, step=21, 30-day embargo).
+- **Results (76 folds, OOS 2020-2026, skill = 1 - RMSE/RMSE_rw)**: random walk RMSE **0.0952** (the floor); seasonal naive 0.1199 (-26%); AR(1) 0.0989 (-4%); **vanilla XGBoost 0.0980 (-3%)**. None beats the random walk overall. XGBoost's skill is **regime-dependent** per-year: beats RW in trending years (2021/2023/2024), loses in shock/calm years. That asymmetry was the hypothesis for the Week-5 lift test.
+- `notebooks/figures/02_xgb_vs_rw_by_year.png` + README section #2.
+- **FastAPI stub backend on Render**; **Next.js dashboard shell on Vercel** (three views + status badge, stub data). Instrument aesthetic — uncertainty-band **cone** as the signature visual.
 
-**Deviations from plan**:
+**Deviations from plan**: `/health` renamed to `/status` (ad-blockers); fonts via `next/font/google`; custom domain deferred to v2.
 
-- **`/health` renamed to `/status`** — ad-blockers (uBlock/Brave) block `/health`-pattern paths, which made the status badge show a false "offline." `/status` dodges the blocklists.
-- **Fonts via `next/font/google`** rather than a remote CSS `@import` (the import was a build-time network dependency).
-- **Custom domain deferred to v2** (default Vercel/Render URLs for v1, per SCOPE).
-- A few cosmetic polish items (broader mobile pass beyond the header, pasting the three README sections into `README.md`) are tracked in `WEEK4_CLEANUP.md`; none block the deliverable.
+**Environment lessons**: OneDrive-synced repo corrupts build artifacts; **CI green != deployed** (Render needs the green commit promoted).
 
-**Environment lessons (logged so they don't recur)**: OneDrive-synced repo corrupts build artifacts (`.venv`, `.next`) and a zombie dev server on port 3000 masked all edits — `netstat -ano | findstr :3000`, kill the PID, then look at code. And **CI green != deployed**: Render needed an explicit "deploy latest commit" of the green commit.
-
-**Deliverable**: `notebooks/02_baselines.ipynb` + live (stubbed) dashboard URL + live API URL. [done]
+**Deliverable**: `notebooks/02_baselines.ipynb` + live (stubbed) dashboard + live API. [done]
 
 ---
 
-### Week 5 — Lift + Ship MSV
+### Week 5 — Lift + Ship MSV [COMPLETE]
 
-**Window**: ~June 22-28, 2026
-**Time**: 12-14 hours
-
+**Window**: ~June 12-15, 2026 (compressed)
 **Goal**: Show regime features lift over baseline, wire everything live, ship.
 
-> NEXT: Week 5 ship — regime lift + live integration. **First task: contract-lock.** Before wiring any live data, freeze and verify the API response contract the frontend already hardcodes — `interval_80.low/high`, `regime.label`, `regime.vol_pct`, `history[].date`, `history[].close`, `last_price`, `point`, `as_of`, `horizon_days`, `per_year_rmse` keys, `features[]`, `framing` — so the stub->live swap doesn't silently break the dashboard. Confirm the live pipeline's output shapes match these exactly (Pydantic response models are the single source of truth; the frontend `types.ts` must mirror them). Only then start swapping stubs for live data.
+**Shipped (June 15, 2026)** — task by task:
 
-**Tasks**:
+**1. Contract-lock** [done]. Froze the API response contract before any live wiring. `backend/schemas.py` upgraded to constrained models: `RegimeLabel` (Literal of seven canonical labels), `ScenarioSource` (`stub`|`kimi-k2.6`), `vol_pct` bounded 0-100, `as_of`/`history[].date` as dates, and a `model_validator` on `ForecastResponse` enforcing cone-coherence (`history[-1] == (as_of, last_price)`, `low <= point <= high`, ascending unique dates). Frontend `frontend/lib/types.ts` mirrors the enums. `backend/tests/test_contract.py` + a committed OpenAPI snapshot guard it.
 
-- **Contract-lock first** (above) — make the live endpoints conform to the frozen stub shapes.
-- Add regime features to XGBoost; document **lift vs the 0.0980 vanilla baseline** (the regime-dependent per-year skill from Week 4 is the hypothesis to confirm).
-- Quantile regression for probabilistic output (10/50/90 quantiles).
-- Conformal prediction wrapper via `mapie` for calibrated intervals.
-- Wire FastAPI to serve live forecasts from DuckDB (replace the stubs behind the now-locked contract).
-- Next.js dashboard reads live API and renders forecast + 80% interval + regime indicator (the cone is already built — it just needs real data).
-- Kimi K2.6 scenario narration on button click — single prompt integration (`/scenario` flips `"source"` from `"stub"` to `"kimi-k2.6"`).
-- Blog post draft on the journey.
-- Tag `v1.0.0`.
+**2. Regime-feature lift test** [done] — `notebooks/03_regime_lift.ipynb`, pre-registered A/B. **Result: NO LIFT.** Vanilla (8 price/calendar features) RMSE **0.0980** / skill **−0.030** (reproduced the Week-4 baseline — integrity gate passed); Variant A (+4 exogenous) 0.1031 / −0.083; Variant B (+2 more) 0.1082 / −0.137. Regime/exogenous features *hurt*, with damage concentrated in 2023 (consistent with the coverage asymmetry — COT/WASDE begin 2021). **The Week-4 lift hypothesis was rejected; vanilla stands, and the point forecast is the random walk.** PELT regime *labels* were excluded as features (they leak future boundary information). Deeper variants parked in `v2-ideas.md`.
 
-**Open as new chat**. Topic: "OpenAg Week 5 ship — regime lift + live integration."
+**3. Conformal calibration** [done] — `notebooks/04_conformal.ipynb`. XGBoost quantile regression (10/50/90) + **Conformalized Quantile Regression (CQR)**, **hand-rolled, not `mapie`**. Point **anchored at the random walk** (`point == last_price`) per the no-skill finding; the band is the model's quantile spread recentered on the RW point with a single conformal correction `Q` applied symmetrically, on a trailing ~252-row calibration window. **Marginal CQR shipped over conditional**: the vol-tercile conditional variant *relocated* coverage rather than fixing it (it broke the spring-2021 high-vol bucket because there's no pre-2021 high-vol history to calibrate against), so it's unvalidatable on this window → v2. Marginal coverage ~80.8% overall; per-regime uneven and documented honestly (2020 COVID ~68%, unfixable with trailing data). Production model (3 quantile models + the corrections) serialized to `backend/models/`.
 
-**Candidate workflow**: the open-ended live-wiring is the best fit for the parked plan-mode-with-Fable-5 + execution-with-Haiku experiment (see `v2-ideas.md`), if you want to try it here.
+**4. Live wiring** [done] — **precompute-at-refresh architecture** (a deliberate refinement of the planned "serve from DuckDB," chosen for Render's free-tier ephemeral disk + cold starts). `pipeline/generate_forecast.py` runs the model on the latest panel row, writes contract-shaped `backend/data/forecast.json` + `model_card.json` (validated against the Pydantic models before writing), which are committed. The API stays **thin** — loads the JSON, validates against the frozen contract, serves `/forecast`, `/model-card`, `/status`. No XGBoost at request time. `pipeline/build_panel.py` (new) extracts the panel construction from notebook 01 into a script (as-of joins + features + **pinned regime breaks**, no PELT re-run) so the warehouse → panel → forecast chain is reproducible in CI.
+
+**5. Daily auto-refresh** [done] — `refresh.yml` repurposed from the healthcheck no-op to a daily cron (weekdays 12:00 UTC) + `workflow_dispatch`: `build_duckdb` → `build_panel` → `generate_forecast` → commit the JSON → Render auto-redeploys. `FRED_API_KEY` as a repo secret; WASDE source files committed (they were gitignored, which broke the runner's `download=False` read). The forecast now advances daily; `as_of` is current.
+
+**6. Kimi scenario (the AI layer)** [done] — `/scenario` flips `source` from `stub` to `kimi-k2.6`. **Model choice: Kimi K2.6, not K2.7** — K2.7 shipped (June 12) as "K2.7 **Code**," a coding SKU with *forced thinking* and no instant mode, the wrong tool for a latency/cost-sensitive prose narration; K2.6 is the general model and supports instant mode (`"thinking": {"type": "disabled"}`). Called via **`httpx`** (no `openai` SDK — already a dep, no tool sprawl). The handler reads the committed forecast for context (so the note matches the chart), falls back to a deterministic stub on missing-key/error (keeps CI offline and never 500s), and caches by `as_of` (≈1 paid call/day). Prompt is producer-facing per the ProAg lesson — "nearby corn futures" (no invented contract month), grounded strictly in the supplied band/regime (no invented price levels), one paragraph. `MOONSHOT_API_KEY` lives on Render + local `.env` only (not a GitHub secret — so CI uses the offline fallback).
+
+**7. Frontend polish** [done] — y-axis garbled-tick fix (`tickFormatter` rounding to integers + `allowDecimals={false}` + wider axis); model-card header/framing reframed to "Random-walk point + XGBoost quantile interval (CQR-calibrated)" so the card matches the served forecast.
+
+**Deviations from plan**:
+
+- **No regime-feature lift** — the central Week-5 hypothesis failed empirically. This is a *finding*, not a miss: the point forecast is the random walk, and the project's value is the calibrated interval + regime context + scenario layer, exactly the honest framing SCOPE specified.
+- **`mapie` not used** — CQR hand-rolled for transparency and full control of the RW-anchoring. `mapie` drops off the sanctioned learning surface.
+- **Precompute-at-refresh** replaced "API serves from DuckDB" (free-tier reality).
+- **Kimi K2.6, not the newer K2.7** (K2.7 is a forced-thinking coding SKU).
+- **NannyML / Evidently live monitoring deferred to v2** — coverage analysis exists in `notebooks/04_conformal.ipynb`, but live drift/performance instrumentation was not built for v1.
+- **Contract structural tests validate the committed artifact**; the golden-fixture split (so a real >40% shock can't false-fail CI on the daily artifact) is deferred to v1.x. Currently safe because the default `GITHUB_TOKEN` bot commit doesn't retrigger CI.
+- **Model retraining on refresh deferred** — the daily refresh updates *data* only; the model is a fixed serialized artifact.
+
+**Deliverable**: Live MSV at the URLs above, `v1.0.0` tagged. Blog draft pending. [done]
 
 ---
 
 ## Key technical decisions captured from conversation
 
-These are decisions Sid and Claude already made. They're locked unless explicitly revisited.
-
 ### Architecture decisions
 
-- **Stacked ensemble** (XGBoost + LightGBM + CatBoost -> logistic regression meta) is the v2 architecture. v1 ships with single XGBoost to reduce shipping risk.
-- **Champion-challenger** pattern is the v2 deployment story. v1 ships with one model in production.
-- **NannyML + Evidently** are the monitoring stack: NannyML estimates performance without labels (DLE for this regression problem); Evidently tracks data and prediction drift.
-- **Kimi K2.6** integration for MSV is a single prompt that generates a paragraph of scenario context. The agent swarm pattern (300 sub-agents, bull/bear analyst decomposition) is v2.
+- **Precompute-at-refresh** (v1, shipped): the GitHub Action computes the forecast and commits contract-shaped JSON; the API is a thin contract-validating server. Heavy deps live in the Action, not the container.
+- **Stacked ensemble** (XGB + LightGBM + CatBoost -> meta) is v2. v1 ships a single XGBoost — and the *point* is the random walk, since XGBoost showed no point-skill (−0.03 vs RW).
+- **Champion-challenger** is the v2 deployment story. v1 runs one fixed model.
+- **NannyML + Evidently** monitoring: **deferred to v2** (manual coverage analysis only in v1).
 
 ### Modeling principles
 
-- Walk-forward (rolling-origin) evaluation only. No standard k-fold on time-series data.
-- Per-year metric breakdown in evaluation reporting — surface the years where the model underperforms instead of burying them in an aggregate.
-- Probabilistic outputs (quantile regression + conformal wrapper) rather than point forecasts.
-- Time-weighted sampling as a hyperparameter knob (exponential decay).
-- Regime indicators as continuous features, not as discrete classification labels.
-- Calibration tracking: log every prediction with its interval; record empirical coverage over rolling windows.
+- Walk-forward (rolling-origin) evaluation only.
+- Per-year metric breakdown surfaced, not buried.
+- Probabilistic outputs (quantile + **hand-rolled CQR**, marginal) over point forecasts; point anchored at the random walk.
+- Regime indicators as continuous features (and they didn't lift in v1 — documented).
+- Calibration tracked; coverage reported per regime, honestly, including the unfixable COVID gap.
 
 ### Data decisions
 
-- Corn front-month (`ZC=F`) for v1. Soybean (`ZS=F`) is the natural v2 expansion.
-- 10 years of daily history.
-- Free public sources only: USDA WASDE, USDA NASS Quickstats, yfinance for CME prices, CFTC Commitments of Traders, NOAA US Drought Monitor, FRED.
-- DuckDB for storage (file-based, fast, version-friendly).
-- **Term-structure shape feature deferred to v2** — front-month-only data has no curve slope (needs >=2 curve points). See `v2-ideas.md`.
-- **WASDE units note**: the ingested US corn ending-stocks series is in **million metric tons** (world-table US line), not million bushels. Irrelevant for modeling (it gets percentiled), but documented so the unit isn't misread.
+- Corn front-month (`ZC=F`) for v1. Soybean (`ZS=F`) is the v2 expansion.
+- Free public sources only (yfinance, USDA WASDE, CFTC COT, NOAA Drought Monitor, FRED).
+- DuckDB warehouse; `pipeline/build_panel.py` is the canonical panel builder (pinned regime breaks).
+- **Term-structure shape** deferred to v2 (front-month-only). **WASDE US ending stocks in MMT** (percentiled, so unit-agnostic for modeling).
 
 ### Framing decisions
 
-- README pitch is **"risk management infrastructure under regime uncertainty"**, never "predicts corn within X%."
-- The honest position: **an LLM layer does not improve forecast accuracy.** It improves interpretability and decision-readiness. Don't claim otherwise.
-- Selling points: calibrated uncertainty, regime awareness, scenario reasoning, production monitoring, automated retraining.
-- Acknowledge upfront that forecasting commodity prices is hard; the value of the system is in *quantifying what it doesn't know*.
+- Pitch is **"risk management infrastructure under regime uncertainty,"** never "predicts corn within X%."
+- **An LLM layer does not improve forecast accuracy** — it improves interpretability and decision-readiness. The model card states this; the scenario layer honors it.
+- Value is in *quantifying what it doesn't know*.
 
 ### Tooling decisions
 
-- **Python 3.13**, managed with **uv** (`pyproject.toml` + `uv.lock`). No pip/conda.
-- **Repo layout**: monorepo. Planning docs live in `docs/`; `README.md`, `CLAUDE.md`, and `AGENTS.md` stay at root for agentic tools.
-- **Frontend stack** (Week 4): Next.js (App Router) + TypeScript + Tailwind + recharts; `next/font` for type. Deployed on Vercel (Root Directory = `frontend`). Backend FastAPI on Render (`render.yaml` IaC, uv build). `NEXT_PUBLIC_API_URL` is the frontend->backend seam; CORS via `ALLOWED_ORIGIN_REGEX`.
-- **Backups**: raw downloads cached/timestamped in `data/raw/`; the DuckDB file is regenerable and gitignored on main. GitHub is the offsite backup.
-- **`ruptures`** is the sanctioned new dependency for Week 3; `scipy` rides in with it. Structural-break tests are hand-rolled.
-- **Agentic split**: plan-mode-with-Sonnet + execution-with-Haiku is the proven pattern. Upgrading the planner to Claude Fable 5 for open-ended work (best fit: Week 5 live wiring) is parked in `v2-ideas.md`.
-- **Environment**: keep the working repo out of OneDrive-synced folders — sync corrupts `.venv`/`.next`/`node_modules`. Git is the sync.
+- **Python 3.13** via **uv**. Monorepo; planning docs in `docs/`, agentic files (`README`/`CLAUDE.md`/`AGENTS.md`) at root.
+- **Frontend**: Next.js + TS + Tailwind + recharts on Vercel. **Backend**: FastAPI on Render (`render.yaml`, `UV_PYTHON_DOWNLOADS=automatic` to allow the pinned 3.13.12). `NEXT_PUBLIC_API_URL` seam; CORS via `ALLOWED_ORIGIN_REGEX`.
+- **Kimi K2.6** via OpenAI-compatible endpoint `https://api.moonshot.ai/v1`, instant mode, called with `httpx`.
+- **`ruptures`** sanctioned for Week 3 (exploratory only — production breaks are pinned constants). **CQR hand-rolled** (no `mapie`).
+- **Agentic split**: architecture/decisions in Claude chat; execution moved from **Claude Code (Haiku, paid)** to **OpenAI Codex (free student credits)**. The **Fable-5 planner experiment is dead** — Claude Fable 5 was shut down ~3 days after launch. Repo already ships `AGENTS.md`, which Codex reads.
+- **Environment**: keep the repo out of OneDrive (sync corrupts `.venv`/`.next`); git is the sync.
 
-## Risks to monitor
+## Post-v1.0.0 (next)
 
-1. **Scope creep** — high probability. Mitigation: every new idea goes to `v2-ideas.md`, never into v1.
-2. **Job search competition** — this project must accelerate, not compete with, job search. Mitigation: weekly time audit.
-3. **Burnout** — multiple concurrent commitments. Mitigation: protect hobbies (Rocket League, F1 weekends, cooking, gym).
-4. **Domain perfectionism** — Mitigation: Week 1 was the research week; after that, learn what the data forces.
-5. **Tool sprawl** — Mitigation: use known tools except the deliberate learning surface (NannyML, Evidently, `ruptures`, Kimi K2.6, conformal via `mapie`).
-6. **Hackathon followup contention** — if Cerebral Valley followup demands time, OpenAg pauses for a week.
+- **Blog post draft** (Sid-authored, in progress) — the journey: regime detection, the no-lift finding, RW point + calibrated interval, the LLM decision-readiness layer. The last SCOPE success criterion.
+- **v1.x polish**: golden-fixture contract tests; broader mobile pass; README sections finalized.
+- **v2 candidates** (see `v2-ideas.md`): NannyML/Evidently live monitoring, stacked ensemble + champion-challenger, soybean expansion, multi-horizon, conditional conformal once there's enough high-vol history, retraining on refresh.
 
 ## How to resume across chats
 
-Each new chat in the Claude Project should open with:
-
-> "Picking up OpenAg Risk Twin at Week N. SCOPE.md and PLAN.md are in the project files. Today's focus: [specific topic]."
-
-Update this PLAN.md at the end of each phase with what actually shipped vs what was planned, so the historical record stays accurate.
+Open with: *"Picking up OpenAg Risk Twin — v1.0.0 is live. Today's focus: [topic]."* Update this PLAN.md at the end of meaningful work so the record stays accurate.
